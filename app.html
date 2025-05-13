@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Primera App Vue</title>
+    <!-- Importamos Vue directamente desde CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .completada {
+            text-decoration: line-through;
+            color: gray;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+        input[type="text"] {
+            padding: 5px;
+            width: 70%;
+        }
+    </style>
+</head>
+<body>
+    <!-- El div donde vivirá nuestra app Vue -->
+    <div id="app">
+        <h1>Lista de Tareas</h1>
+        
+        <!-- Campo para añadir tarea -->
+        <div>
+            <input type="text" 
+                   v-model="nuevaTarea" 
+                   placeholder="Añadir nueva tarea" 
+                   @keyup.enter="agregarTarea">
+            <button @click="agregarTarea">Añadir</button>
+        </div>
+        
+        <!-- Lista de tareas -->
+        <ul>
+            <li v-for="(tarea, indice) in tareas" :key="indice">
+                <input type="checkbox" v-model="tarea.completada">
+                <span :class="{ completada: tarea.completada }">
+                    {{ tarea.texto }}
+                </span>
+                <button @click="eliminarTarea(indice)">❌</button>
+            </li>
+        </ul>
+        
+        <!-- Contador de tareas -->
+        <p>{{ tareasPendientes }} tareas pendientes</p>
+    </div>
+
+    <script>
+        // Crear nuestra aplicación Vue
+        const { createApp } = Vue
+        
+        createApp({
+            // Datos de nuestra aplicación
+            data() {
+                return {
+                    nuevaTarea: '',
+                    tareas: [
+                        { texto: 'Aprender Vue', completada: false },
+                        { texto: 'Crear un componente', completada: false }
+                    ]
+                }
+            },
+            
+            // Propiedades calculadas
+            computed: {
+                tareasPendientes() {
+                    return this.tareas.filter(tarea => !tarea.completada).length
+                }
+            },
+            
+            // Métodos de nuestra aplicación
+            methods: {
+                agregarTarea() {
+                    if (this.nuevaTarea.trim() !== '') {
+                        this.tareas.push({
+                            texto: this.nuevaTarea,
+                            completada: false
+                        })
+                        this.nuevaTarea = ''
+                    }
+                },
+                
+                eliminarTarea(indice) {
+                    this.tareas.splice(indice, 1)
+                }
+            }
+        }).mount('#app')
+    </script>
+</body>
+</html>
