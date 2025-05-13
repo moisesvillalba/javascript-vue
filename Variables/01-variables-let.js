@@ -17,3 +17,4 @@ let edad = 25;
 // Permite reasignación
 edad = 26; // Esto está bien
 console.log("Nueva edad:", edad);
+

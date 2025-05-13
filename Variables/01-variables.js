@@ -18,3 +18,8 @@ console.log("Contador:", contador);
 // 3. Problema de "hoisting" (elevación)
 console.log(nombre); // undefined (no da error)
 var nombre = "Ana";  // La declaración se eleva, pero no el valor
+
+var mensaje = "Hola desde var";
+let saludo = "Hola desde let";
+const pi = 3.1416;
+console.log(mensaje, saludo, pi);
