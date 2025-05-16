@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Detector de Copiar y Cortar en JavaScript Puro</title>
+</head>
+<body>
+  <div id="app">
+    <h1 id="titulo">Detector de Copiar y Cortar</h1>
+    
+    <!-- Área de texto que detectará eventos de copiar/cortar -->
+    <textarea 
+      id="area-texto"
+      class="area-texto"
+      placeholder="Intenta copiar o cortar texto de aquí..."
+    >Este es un texto de ejemplo. Intenta copiar o cortar parte de él.</textarea>
+    
+    <div id="mensaje" class="mensaje" style="display: none;">
+      <!-- El mensaje se mostrará aquí -->
+    </div>
+    
+    <button id="btn-limpiar">Limpiar mensaje</button>
+  </div>
+
+  <style>
+    .area-texto {
+      width: 100%;
+      height: 100px;
+      margin: 10px 0;
+      padding: 8px;
+    }
+    .mensaje {
+      padding: 10px;
+      background-color: #e0d7f8;
+      border: 1px solid #f5c6cb;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+  </style>
+
+  <script>
+    // Esperamos a que el DOM esté completamente cargado
+    document.addEventListener('DOMContentLoaded', function() {
+      // Obtener referencias a los elementos del DOM
+      const areaTexto = document.getElementById('area-texto');
+      const mensajeDiv = document.getElementById('mensaje');
+      const btnLimpiar = document.getElementById('btn-limpiar');
+      
+      // Variable para almacenar el mensaje actual
+      let mensajeEvento = '';
+      
+      // Función para actualizar la interfaz según el estado
+      function actualizarUI() {
+        if (mensajeEvento) {
+          mensajeDiv.textContent = mensajeEvento;
+          mensajeDiv.style.display = 'block';
+        } else {
+          mensajeDiv.style.display = 'none';
+        }
+      }
+      
+      // Método que se activa cuando el usuario copia texto
+      function detectarCopia(evento) {
+        // Obtener el texto que está siendo copiado
+        const textoCopiado = window.getSelection().toString();
+        mensajeEvento = `¡Has copiado el texto: "${textoCopiado}"!`;
+        
+        // Actualizar la interfaz
+        actualizarUI();
+        
+        // Si quieres prevenir la copia, descomenta la siguiente línea:
+        // evento.preventDefault();
+      }
+      
+      // Método que se activa cuando el usuario corta texto
+      function detectarCorte(evento) {
+        // Obtener el texto que está siendo cortado
+        const textoCortado = window.getSelection().toString();
+        mensajeEvento = `¡Has cortado el texto: "${textoCortado}"!`;
+        
+        // Actualizar la interfaz
+        actualizarUI();
+        
+        // Si quieres prevenir el corte, descomenta la siguiente línea:
+        // evento.preventDefault();
+      }
+      
+      // Método para limpiar el mensaje
+      function limpiarMensaje() {
+        mensajeEvento = '';
+        actualizarUI();
+      }
+      
+      // Agregar event listeners a los elementos
+      areaTexto.addEventListener('copy', detectarCopia);
+      areaTexto.addEventListener('cut', detectarCorte);
+      btnLimpiar.addEventListener('click', limpiarMensaje);
+    });
+  </script>
+</body>
+</html>

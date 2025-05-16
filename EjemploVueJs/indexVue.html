@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Vue CDN Example</title>
+  <!-- Importar Vue desde CDN -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<body>
+  <div id="app">
+    <h1>{{ titulo }}</h1>
+    <p>{{ mensaje }}</p>
+    <button @click="cambiarMensaje">Cambiar mensaje</button>
+  </div>
+
+  <script>
+    const { createApp } = Vue
+    
+    createApp({
+      data() {
+        return {
+          titulo: 'Mi App Vue con CDN',
+          mensaje: 'Hola Mundo'
+        }
+      },
+      methods: {
+        cambiarMensaje() {
+          this.mensaje = 'Mensaje cambiado'
+        }
+      }
+    }).mount('#app')
+  </script>
+</body>
+</html>

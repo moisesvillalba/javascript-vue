@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detector de Interacción con Texto</title>
+  <!-- Importamos Vue desde CDN -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    
+    h1 {
+      color: #2c3e50;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .contenedor {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .area-texto {
+      width: 100%;
+      height: 150px;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+      box-sizing: border-box;
+      margin-bottom: 15px;
+    }
+    
+    .evento {
+      padding: 10px 15px;
+      margin-bottom: 10px;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    
+    .evento-seleccion {
+      background-color: #e8f4fd;
+      border-left: 4px solid #2196F3;
+    }
+    
+    .evento-copia {
+      background-color: #e8f8e8;
+      border-left: 4px solid #4CAF50;
+    }
+    
+    .evento-corte {
+      background-color: #fff8e1;
+      border-left: 4px solid #FFC107;
+    }
+    
+    .historial {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #eee;
+      border-radius: 4px;
+      padding: 10px;
+      background-color: #f9f9f9;
+    }
+    
+    .botones {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    
+    button {
+      padding: 8px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s;
+    }
+    
+    .btn-limpiar {
+      background-color: #e74c3c;
+      color: white;
+    }
+    
+    .btn-limpiar:hover {
+      background-color: #c0392b;
+    }
+    
+    .estadisticas {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 15px;
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    
+    .dato-estadistico {
+      text-align: center;
+    }
+    
+    .numero {
+      font-size: 24px;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+    
+    .etiqueta {
+      font-size: 12px;
+      color: #7f8c8d;
+    }
+    
+    .destacado {
+      background-color: yellow;
+      padding: 2px 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h1>Detector de Interacción con Texto</h1>
+    
+    <div class="contenedor">
+      <h2>Área de texto interactiva</h2>
+      <p>Selecciona, copia o corta texto para ver eventos en acción:</p>
+      
+      <textarea 
+        class="area-texto" 
+        v-model="texto" 
+        @select="detectarSeleccion" 
+        @copy="detectarCopia" 
+        @cut="detectarCorte"
+        placeholder="Escribe o pega texto aquí..."
+      ></textarea>
+      
+      <div class="evento evento-seleccion" v-if="infoSeleccion">
+        <strong>Texto seleccionado:</strong> "{{ infoSeleccion.texto }}"
+        <div><small>Posición: {{ infoSeleccion.inicio }} a {{ infoSeleccion.fin }}</small></div>
+      </div>
+      
+      <div class="evento evento-copia" v-if="infoCopia">
+        <strong>Texto copiado:</strong> "{{ infoCopia.texto }}"
+        <div><small>{{ infoCopia.tiempo }}</small></div>
+      </div>
+      
+      <div class="evento evento-corte" v-if="infoCorte">
+        <strong>Texto cortado:</strong> "{{ infoCorte.texto }}"
+        <div><small>{{ infoCorte.tiempo }}</small></div>
+      </div>
+      
+      <div class="botones">
+        <button class="btn-limpiar" @click="limpiarEventos">Limpiar eventos</button>
+        <button @click="restaurarTextoEjemplo">Restaurar texto ejemplo</button>
+      </div>
+    </div>
+    
+    <div class="contenedor">
+      <h2>Historial de eventos</h2>
+      <div v-if="historial.length === 0" style="text-align: center; padding: 20px; color: #7f8c8d;">
+        El historial de eventos aparecerá aquí
+      </div>
+      <div class="historial" v-else>
+        <div 
+          v-for="(evento, index) in historial" 
+          :key="index" 
+          :class="'evento evento-' + evento.tipo"
+        >
+          <strong>{{ evento.titulo }}:</strong> "{{ evento.texto }}"
+          <div><small>{{ evento.tiempo }}</small></div>
+        </div>
+      </div>
+      
+      <div class="estadisticas">
+        <div class="dato-estadistico">
+          <div class="numero">{{ contadorSelecciones }}</div>
+          <div class="etiqueta">Selecciones</div>
+        </div>
+        <div class="dato-estadistico">
+          <div class="numero">{{ contadorCopias }}</div>
+          <div class="etiqueta">Copias</div>
+        </div>
+        <div class="dato-estadistico">
+          <div class="numero">{{ contadorCortes }}</div>
+          <div class="etiqueta">Cortes</div>
+        </div>
+        <div class="dato-estadistico">
+          <div class="numero">{{ caracteresInteractuados }}</div>
+          <div class="etiqueta">Caracteres</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="contenedor">
+      <h2>Texto con análisis de palabras</h2>
+      <p>Ejemplo de cómo procesar el texto seleccionado:</p>
+      <div v-html="textoConPalabrasResaltadas"></div>
+    </div>
+  </div>
+  
+  <script>
+    const { createApp } = Vue
+    
+    createApp({
+      data() {
+        return {
+          // Texto en el área de texto
+          texto: "Este es un texto de ejemplo. Puedes seleccionar palabras o frases para ver cómo funcionan los eventos de selección. También puedes intentar copiar o cortar partes del texto para ver esos eventos en acción.",
+          
+          // Información sobre eventos actuales
+          infoSeleccion: null,
+          infoCopia: null,
+          infoCorte: null,
+          
+          // Historial de eventos
+          historial: [],
+          
+          // Contadores para estadísticas
+          contadorSelecciones: 0,
+          contadorCopias: 0,
+          contadorCortes: 0,
+          caracteresInteractuados: 0,
+          
+          // Texto original para restaurar
+          textoOriginal: "Este es un texto de ejemplo. Puedes seleccionar palabras o frases para ver cómo funcionan los eventos de selección. También puedes intentar copiar o cortar partes del texto para ver esos eventos en acción."
+        }
+      },
+      
+      computed: {
+        // Ejemplo de cómo procesar el texto para resaltar palabras
+        textoConPalabrasResaltadas() {
+          if (!this.texto) return "";
+          
+          // Vamos a resaltar palabras con más de 8 caracteres
+          return this.texto.split(" ").map(palabra => {
+            // Limpiamos la palabra de puntuación para el conteo
+            const palabraLimpia = palabra.replace(/[.,;!?]/g, "");
+            
+            if (palabraLimpia.length > 8) {
+              return `<span class="destacado">${palabra}</span>`;
+            } else {
+              return palabra;
+            }
+          }).join(" ");
+        }
+      },
+      
+      methods: {
+        // Método para detectar selección de texto
+        detectarSeleccion(evento) {
+          // Obtenemos la posición de inicio y fin de la selección
+          const inicio = evento.target.selectionStart;
+          const fin = evento.target.selectionEnd;
+          
+          // Solo procesamos si hay texto seleccionado
+          if (inicio !== fin) {
+            const textoSeleccionado = this.texto.substring(inicio, fin);
+            
+            // Guardamos información sobre la selección
+            this.infoSeleccion = {
+              texto: textoSeleccionado,
+              inicio: inicio,
+              fin: fin
+            };
+            
+            // Agregamos al historial
+            this.agregarEventoHistorial('seleccion', 'Selección', textoSeleccionado);
+            
+            // Actualizamos contadores
+            this.contadorSelecciones++;
+            this.caracteresInteractuados += textoSeleccionado.length;
+          }
+        },
+        
+        // Método para detectar copia de texto
+        detectarCopia(evento) {
+          const textoCopiado = window.getSelection().toString();
+          
+          if (textoCopiado) {
+            // Guardamos información sobre la copia
+            this.infoCopia = {
+              texto: textoCopiado,
+              tiempo: this.obtenerHoraActual()
+            };
+            
+            // Agregamos al historial
+            this.agregarEventoHistorial('copia', 'Copia', textoCopiado);
+            
+            // Actualizamos contadores
+            this.contadorCopias++;
+          }
+        },
+        
+        // Método para detectar corte de texto
+        detectarCorte(evento) {
+          const textoCortado = window.getSelection().toString();
+          
+          if (textoCortado) {
+            // Guardamos información sobre el corte
+            this.infoCorte = {
+              texto: textoCortado,
+              tiempo: this.obtenerHoraActual()
+            };
+            
+            // Agregamos al historial
+            this.agregarEventoHistorial('corte', 'Corte', textoCortado);
+            
+            // Actualizamos contadores
+            this.contadorCortes++;
+          }
+        },
+        
+        // Método auxiliar para agregar eventos al historial
+        agregarEventoHistorial(tipo, titulo, texto) {
+          this.historial.unshift({
+            tipo: tipo,
+            titulo: titulo,
+            texto: texto,
+            tiempo: this.obtenerHoraActual()
+          });
+          
+          // Limitamos el historial a los últimos 10 eventos
+          if (this.historial.length > 10) {
+            this.historial.pop();
+          }
+        },
+        
+        // Método para obtener la hora actual formateada
+        obtenerHoraActual() {
+          const ahora = new Date();
+          return ahora.toLocaleTimeString();
+        },
+        
+        // Método para limpiar todos los eventos
+        limpiarEventos() {
+          this.infoSeleccion = null;
+          this.infoCopia = null;
+          this.infoCorte = null;
+          this.historial = [];
+        },
+        
+        // Método para restaurar el texto de ejemplo
+        restaurarTextoEjemplo() {
+          this.texto = this.textoOriginal;
+        }
+      }
+    }).mount('#app')
+  </script>
+</body>
+</html>
