@@ -1,0 +1,97 @@
+        /* Estilo general de la página */
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #e0f2f7; /* Azul muy claro como fondo general */
+        }
+        
+        /* Estilos para el contenedor principal */
+        #app {
+            background-color: #fff; /* Blanco para el contenedor principal */
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        
+        /* Estilos para el título */
+        h1 {
+            color: #1a237e; /* Azul marino oscuro para el título */
+            margin-top: 0;
+            text-align: center;
+        }
+        
+        /* Estilos para el área de texto */
+        .area-texto {
+            width: 100%;
+            height: 100px;
+            margin: 15px 0;
+            padding: 10px;
+            border: 1px solid #90caf9; /* Azul claro para el borde del área de texto */
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box; /* Hace que el padding no se sume al ancho */
+        }
+        
+        /* Estilos para el mensaje */
+        .mensaje {
+            padding: 15px;
+            background-color: #bbdefb; /* Azul claro para el fondo del mensaje */
+            border: 1px solid #64b5f6; /* Azul medio para el borde del mensaje */
+            border-radius: 4px;
+            margin: 15px 0;
+            color: #1565c0; /* Azul más oscuro para el texto del mensaje */
+            font-weight: 500;
+        }
+        
+        /* Estilos para el botón */
+        button {
+            background-color: #1e88e5; /* Azul medio para el botón */
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer; /* Cambia el cursor a una mano al pasar sobre el botón */
+            font-size: 16px;
+            transition: background-color 0.3s; /* Animación suave al cambiar de color */
+        }
+        
+        /* Efecto hover para el botón */
+        button:hover {
+            background-color: #1565c0; /* Azul más oscuro al pasar el ratón */
+        }
+        
+        /* Estilos para la sección de estadísticas */
+        .estadisticas {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e3f2fd; /* Azul muy claro para el fondo de estadísticas */
+            border-radius: 4px;
+            border-left: 4px solid #1e88e5; /* Azul medio para la línea lateral de estadísticas */
+        }
+        
+        /* Estilo para el historial */
+        .historial {
+            margin-top: 20px;
+        }
+        
+        .historial h3 {
+            color: #1a237e; /* Azul marino oscuro para el título del historial */
+            border-bottom: 1px solid #90caf9; /* Azul claro para el borde inferior del título del historial */
+            padding-bottom: 5px;
+        }
+        
+        .historial-item {
+            padding: 8px;
+            margin: 5px 0;
+            background-color: #f0f8ff; /* Azul muy pálido para los items del historial */
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        /* Color alternado para los items del historial */
+        .historial-item:nth-child(odd) {
+            background-color: #e0f7fa; /* Otro tono azul muy pálido para alternar */
+        }

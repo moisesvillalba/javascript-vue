@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detector de Copiar y Cortar en JavaScript</title>
+    <!-- Estilos CSS para nuestra aplicación -->
+     <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Contenedor principal de nuestra aplicación -->
+    <div id="app">
+        <h1 id="titulo">Detector de Copiar y Cortar</h1>
+        
+        <!-- Instrucciones para el usuario -->
+        <p>Selecciona algo de texto en el área de abajo y luego cópialo (Ctrl+C) o córtalo (Ctrl+X) para ver el detector en acción:</p>
+        
+        <!-- Área de texto donde detectaremos eventos -->
+        <textarea 
+            id="area-texto"
+            class="area-texto"
+            placeholder="Intenta copiar o cortar texto de aquí..."
+        >Este es un texto de ejemplo. Intenta copiar o cortar parte de él. También puedes pegar texto aquí para ver cómo funciona el evento de pegado.</textarea>
+        
+        <!-- Aquí mostraremos los mensajes de eventos -->
+        <div id="mensaje" class="mensaje" style="display: none;">
+            <!-- El contenido será insertado por JavaScript -->
+        </div>
+        
+        <!-- Botón para limpiar el mensaje actual -->
+        <button id="btn-limpiar">Limpiar mensaje</button>
+        
+        <!-- Sección para mostrar estadísticas -->
+        <div class="estadisticas">
+            <h3>Estadísticas</h3>
+            <p>Copias: <span id="contador-copias">0</span></p>
+            <p>Cortes: <span id="contador-cortes">0</span></p>
+            <p>Pegados: <span id="contador-pegados">0</span></p>
+        </div>
+        
+        <!-- Sección para mostrar historial de acciones -->
+        <div class="historial">
+            <h3>Historial de acciones</h3>
+            <div id="lista-historial">
+                <!-- El historial será insertado por JavaScript -->
+                <div class="historial-vacio">No hay acciones registradas</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Código JavaScript -->
+    <script>
+        // ===== PASO 1: Esperar a que el DOM esté completamente cargado =====
+        // Este evento se dispara cuando el navegador ha terminado de construir el DOM (Document Object Model)
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('La página ha cargado completamente'); // Mensaje en consola para verificación
+            
+            // ===== PASO 2: Obtener referencias a los elementos del DOM =====
+            // Usamos getElementById para seleccionar elementos específicos por su ID
+            const areaTexto = document.getElementById('area-texto');          // El área de texto
+            const mensajeDiv = document.getElementById('mensaje');            // Div donde mostraremos mensajes
+            const btnLimpiar = document.getElementById('btn-limpiar');        // Botón para limpiar
+            
+            // Elementos para estadísticas
+            const contadorCopias = document.getElementById('contador-copias');
+            const contadorCortes = document.getElementById('contador-cortes');
+            const contadorPegados = document.getElementById('contador-pegados');
+            const listaHistorial = document.getElementById('lista-historial');
+            
+            // ===== PASO 3: Inicializar variables para el estado de la aplicación =====
+            // Estas variables almacenarán el estado actual de nuestra aplicación
+            let mensajeEvento = '';          // Texto del mensaje actual
+            let numCopias = 0;               // Contador de veces que se ha copiado texto
+            let numCortes = 0;               // Contador de veces que se ha cortado texto
+            let numPegados = 0;              // Contador de veces que se ha pegado texto
+            let historialAcciones = [];      // Array para almacenar historial de acciones
+            
+            // ===== PASO 4: Función para actualizar la interfaz de usuario =====
+            // Esta función sincroniza lo que ve el usuario con el estado actual de la aplicación
+            function actualizarUI() {
+                // Actualizar mensaje (si existe)
+                if (mensajeEvento) {
+                    // Si hay un mensaje, lo mostramos
+                    mensajeDiv.textContent = mensajeEvento;  // Establecer el texto del mensaje
+                    mensajeDiv.style.display = 'block';      // Hacer visible el div del mensaje
+                } else {
+                    // Si no hay mensaje, ocultamos el div
+                    mensajeDiv.style.display = 'none';
+                }
+                
+                // Actualizar contadores
+                contadorCopias.textContent = numCopias;
+                contadorCortes.textContent = numCortes;
+                contadorPegados.textContent = numPegados;
+                
+                // Actualizar historial
+                actualizarHistorial();
+            }
+            
+            // Función para actualizar la lista de historial
+            function actualizarHistorial() {
+                // Limpiar el historial actual
+                listaHistorial.innerHTML = '';
+                
+                // Si no hay acciones en el historial, mostrar mensaje
+                if (historialAcciones.length === 0) {
+                    listaHistorial.innerHTML = '<div class="historial-vacio">No hay acciones registradas</div>';
+                    return;
+                }
+                
+                // Recorrer el array de historial y crear elementos para cada acción
+                historialAcciones.forEach(function(accion) {
+                    // Crear un nuevo elemento div para esta acción
+                    const item = document.createElement('div');
+                    item.className = 'historial-item';
+                    item.textContent = accion;
+                    
+                    // Añadir el elemento al inicio de la lista para que las acciones más recientes aparezcan primero
+                    listaHistorial.prepend(item);
+                });
+                
+                // Limitamos el historial visible a las últimas 5 acciones
+                while (listaHistorial.children.length > 5) {
+                    listaHistorial.removeChild(listaHistorial.lastChild);
+                }
+            }
+            
+            // ===== PASO 5: Función para obtener la hora actual formateada =====
+            function obtenerHoraActual() {
+                const ahora = new Date();
+                return ahora.getHours() + ':' + 
+                      (ahora.getMinutes() < 10 ? '0' : '') + ahora.getMinutes() + ':' + 
+                      (ahora.getSeconds() < 10 ? '0' : '') + ahora.getSeconds();
+            }
+            
+            // ===== PASO 6: Función para manejar el evento de copia =====
+            function detectarCopia(evento) {
+                // Obtener el texto que está siendo copiado usando la API de selección
+                const textoCopiado = window.getSelection().toString();
+                
+                // Solo procesamos si hay texto seleccionado
+                if (textoCopiado) {
+                    // Crear mensaje indicando el texto copiado
+                    mensajeEvento = `¡Has copiado el texto: "${textoCopiado}"!`;
+                    
+                    // Incrementar contador de copias
+                    numCopias++;
+                    
+                    // Añadir esta acción al historial
+                    historialAcciones.unshift(`${obtenerHoraActual()} - Copiado: "${textoCopiado}"`);
+                    
+                    // Actualizar toda la interfaz
+                    actualizarUI();
+                    
+                    console.log('Texto copiado:', textoCopiado); // Para depuración
+                    
+                    // Si quisiéramos prevenir la copia, descomentaríamos:
+                    // evento.preventDefault();
+                }
+            }
+            
+            // ===== PASO 7: Función para manejar el evento de corte =====
+            function detectarCorte(evento) {
+                // Obtener el texto que está siendo cortado
+                const textoCortado = window.getSelection().toString();
+                
+                // Solo procesamos si hay texto seleccionado
+                if (textoCortado) {
+                    // Crear mensaje indicando el texto cortado
+                    mensajeEvento = `¡Has cortado el texto: "${textoCortado}"!`;
+                    
+                    // Incrementar contador de cortes
+                    numCortes++;
+                    
+                    // Añadir esta acción al historial
+                    historialAcciones.unshift(`${obtenerHoraActual()} - Cortado: "${textoCortado}"`);
+                    
+                    // Actualizar la interfaz
+                    actualizarUI();
+                    
+                    console.log('Texto cortado:', textoCortado); // Para depuración
+                    
+                    // Si quisiéramos prevenir el corte, descomentaríamos:
+                    // evento.preventDefault();
+                }
+            }
+            
+            // ===== PASO 8: Función para manejar el evento de pegado =====
+            function detectarPegado(evento) {
+                // Para eventos de pegado, el texto pegado está en el portapapeles
+                // Pero no podemos acceder directamente al portapapeles por seguridad
+                // Por lo tanto, dejamos un tiempo para que el texto se pegue y luego actuamos
+                
+                // Guardamos el contenido antes del pegado
+                const contenidoAntes = areaTexto.value;
+                
+                // Usamos setTimeout para ejecutar código después del pegado
+                setTimeout(function() {
+                    // Aquí el texto ya estará pegado
+                    const contenidoDespues = areaTexto.value;
+                    
+                    // Intentamos deducir el texto pegado comparando antes y después
+                    // Esto es una aproximación simple y puede no ser exacta en todos los casos
+                    const posibleTextoPegado = contenidoDespues.length - contenidoAntes.length;
+                    
+                    // Crear mensaje
+                    mensajeEvento = `¡Has pegado texto! (aproximadamente ${posibleTextoPegado} caracteres)`;
+                    
+                    // Incrementar contador de pegados
+                    numPegados++;
+                    
+                    // Añadir esta acción al historial
+                    historialAcciones.unshift(`${obtenerHoraActual()} - Pegado: aproximadamente ${posibleTextoPegado} caracteres`);
+                    
+                    // Actualizar la interfaz
+                    actualizarUI();
+                    
+                    console.log('Texto posiblemente pegado:', posibleTextoPegado, 'caracteres'); // Para depuración
+                }, 10); // Pequeño retraso para asegurar que el texto ya se pegó
+            }
+            
+            // ===== PASO 9: Función para manejar la selección de texto =====
+            function detectarSeleccion(evento) {
+                // Obtener el texto seleccionado
+                const textoSeleccionado = window.getSelection().toString();
+                
+                // Solo mostramos mensaje si la selección es significativa (más de 3 caracteres)
+                if (textoSeleccionado && textoSeleccionado.length > 3) {
+                    // Actualizar mensaje
+                    mensajeEvento = `Has seleccionado: "${textoSeleccionado}"`;
+                    
+                    // Actualizar la interfaz
+                    actualizarUI();
+                    
+                    console.log('Texto seleccionado:', textoSeleccionado); // Para depuración
+                }
+            }
+            
+            // ===== PASO 10: Función para limpiar el mensaje =====
+            function limpiarMensaje() {
+                // Vaciar la variable de mensaje
+                mensajeEvento = '';
+                
+                // Actualizar la interfaz
+                actualizarUI();
+                
+                console.log('Mensaje limpiado'); // Para depuración
+            }
+            
+            // ===== PASO 11: Agregar event listeners a los elementos =====
+            // Evento de copia
+            areaTexto.addEventListener('copy', detectarCopia);
+            
+            // Evento de corte
+            areaTexto.addEventListener('cut', detectarCorte);
+            
+            // Evento de pegado
+            areaTexto.addEventListener('paste', detectarPegado);
+            
+            // Evento de selección
+            areaTexto.addEventListener('select', detectarSeleccion);
+            
+            // Evento de clic en el botón limpiar
+            btnLimpiar.addEventListener('click', limpiarMensaje);
+            
+            // ===== PASO 12: Mensaje inicial =====
+            console.log('Detector de Copiar y Cortar inicializado correctamente.');
+        });
+    </script>
+</body>
+</html>
